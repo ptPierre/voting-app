@@ -25,16 +25,26 @@ const ethers = require("ethers");
 // });
 
 
-async function main() {
-    const MyContract = await getContractFactory("Ballot");
-    const myContract = await MyContract.deploy(["Eva", "Pierre", "Manon"], votingDuration);
-    console.log("Contract deployed to address:", myContract.address);
+// async function main() {
+//     const MyContract = await ethers.getContractFactory("Ballot");
+//     const myContract = await MyContract.deploy(["Eva", "Pierre", "Manon"], votingDuration);
+//     console.log("Contract deployed to address:", myContract.address);
 
-  }
+//   }
   
-  main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-      console.error(error);
-      process.exit(1);
-    });
+//   main()
+//     .then(() => process.exit(0))
+//     .catch((error) => {
+//       console.error(error);
+//       process.exit(1);
+//     });
+
+async function main() { 
+  const [deployer] = await hre.ethers.getSigners(); 
+  console.log("Deploying contracts with the account:", deployer.address); 
+  const votingDuration = 86400; // 1 day in seconds
+  const MyContract = await hre.ethers.getContractFactory("Ballot"); 
+  const myContract = await MyContract.deploy([]); 
+  console.log("Contract deployed to address:", myContract.address); } 
+  
+main().catch((error) => { console.error(error); process.exitCode = 1; });
