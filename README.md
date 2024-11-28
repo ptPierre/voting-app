@@ -1,13 +1,38 @@
-# Sample Hardhat Project
+# Basic Voting DApp with Hardhat on Holesky
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+## Overview
 
-Try running some of the following tasks:
+This project is a simple **Voting DApp** built using **Hardhat** and **Solidity**, and deployed on the **Holesky** network. The contract allows users to vote for candidates in an election, view the status of the election, and check the remaining time before the voting ends.
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.js
+The smart contract allows:
+- **Adding candidates** by the owner.
+- **Voting for candidates** by users.
+- **Viewing the voting status** and the **remaining time**.
+- **Viewing vote counts** of all candidates.
+### Install depedencies
+
+```bash
+npm install
+```
+
+
+### Deploy a new Smart Contract
+
+Once the dependencies are installed, you can deploy the contract to the **Holesky** network with a custom voting duration.
+
+To deploy the contract with a specific duration (in minutes), run:
+
+```bash
+npx hardhat run scripts/deploy.js --network holesky
+```
+### Environnement varibles in en .env
+ ```bash
+HOLESKY_RPC_URL= ""
+PRIVATE_KEY= ""
+CONTRACT_ADDRESS=""
+```
+
+### Run the application
+```bash
+node index.js
 ```
