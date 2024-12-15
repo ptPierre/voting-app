@@ -7,11 +7,24 @@ const path = require('path');
 const ethers = require('ethers');
 const csv = require('csv-parser');
 const fs = require('fs');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
 
 app.use(fileUpload({ extended: true }));
 app.use('/src', express.static(path.join(__dirname, 'src')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+app.use(cookieParser());
+
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
 
 const port = 3000;
 
@@ -37,19 +50,39 @@ fs.createReadStream('data/users.csv')
 
 // Middleware to check authentication and role
 const checkAuth = async (req, res, next) => {
-    const address = req.headers['x-user-address'];
-    const role = users.get(address?.toLowerCase());
+    const address = req.query.address;
+    console.log('Checking auth for address:', address);
+    
+    if (!address) {
+        if (req.session.user) {
+            console.log('Using session user:', req.session.user);
+            if (req.session.user.role === 'admin' || req.path === '/index.html') {
+                next();
+                return;
+            }
+        }
+        res.redirect('/');
+        return;
+    }
+
+    const role = users.get(address);
     
     if (!role) {
+        console.log('No role found for address');
         res.redirect('/');
         return;
     }
     
     if (role !== 'admin' && (req.path === '/CreateSession.html' || req.path === '/ListVoters.html')) {
+        console.log('Non-admin trying to access admin page');
         res.redirect('/');
         return;
     }
     
+    req.session.user = {
+        address: address,
+        role: role
+    };
     next();
 };
 
@@ -70,22 +103,31 @@ app.get('/ListVoters.html', checkAuth, (req, res) => {
 });
 
 app.get('/api/auth', (req, res) => {
-    const requestAddress = req.query.address.toLowerCase();
-    console.log('Received auth request for address:', requestAddress);
-    console.log('Available users:', Array.from(users.keys()));
+    const requestAddress = req.query.address;
+    console.log('Auth request for address:', requestAddress);
+    const role = users.get(requestAddress);
 
-    // Check if the address exists (case-insensitive)
-    const userAddress = Array.from(users.keys()).find(
-        addr => addr.toLowerCase() === requestAddress
-    );
-
-    if (userAddress) {
-        const role = users.get(userAddress);
-        console.log('Found user with role:', role);
+    if (role) {
+        console.log('Found role:', role);
+        req.session.user = {
+            address: requestAddress,
+            role: role
+        };
         res.json({ authorized: true, role });
     } else {
-        console.log('User not found');
+        console.log('No role found');
         res.json({ authorized: false });
+    }
+});
+
+app.get('/api/check-session', (req, res) => {
+    if (req.session.user) {
+        res.json({ 
+            authenticated: true, 
+            user: req.session.user 
+        });
+    } else {
+        res.json({ authenticated: false });
     }
 });
 
@@ -127,6 +169,17 @@ app.post("/addCandidateToSession", requireAdmin, async (req, res) => {
         console.error(error);
         res.status(500).send("Error adding candidate.");
     }
+});
+
+app.post('/api/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Error destroying session:', err);
+            res.status(500).json({ error: 'Failed to logout' });
+        } else {
+            res.json({ success: true });
+        }
+    });
 });
 
 app.listen(port, () => {
