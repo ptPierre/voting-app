@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Voting Session</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.1/ethers.umd.min.js" type="application/javascript"></script>
+    <script src="/src/services/VotingService.js"></script>
+    <script src="/src/utils/UIUtils.js"></script>
+    <script src="/src/app/SessionManager.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <img src="/public/assets/esilv_logo.png" alt="Logo">
+            <span>ESILV Voting</span>
+        </div>
+        <button class="toggle-btn" onclick="toggleSidebar()">☰ Menu</button>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <a href="/index.html">Vote</a>
+        <a href="/ListVoters.html">Manage Candidates</a>
+        <a href="/CreateSession.html">Create Voting Session</a>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="section-header">
+                <h2>Create a New Voting Session</h2>
+                <p>Set up a new voting session with custom parameters</p>
+            </div>
+
+            <form class="create-session-form" onsubmit="event.preventDefault(); sessionManager.createSession();">
+                <div class="form-group">
+                    <label for="sessionTopic">Session Topic</label>
+                    <input type="text" id="sessionTopic" placeholder="Enter the topic for this voting session" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sessionCandidates">Candidates</label>
+                    <input type="text" id="sessionCandidates" 
+                           placeholder="Enter candidate names separated by commas" required>
+                    <small style="color: #666; display: block; margin-top: 0.5rem;">
+                        Example: John Doe, Jane Smith, Alex Johnson
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="sessionDuration">Duration (minutes)</label>
+                    <input type="number" id="sessionDuration" 
+                           placeholder="Enter the duration in minutes" required min="1">
+                </div>
+
+                <button type="submit">Create Session</button>
+            </form>
+
+            <p id="sessionResult"></p>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle('show');
+        }
+    </script>
+</body>
+</html> 
