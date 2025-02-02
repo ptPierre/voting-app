@@ -2,8 +2,6 @@ class VotingService {
     // Initializes the VotingService class with Ethereum contract details
     constructor() {
         this.contractAddress = "0x31F51048c5Db70651e4499776792BCBa3A63797F";
-        this.provider = null;
-        this.signer = null;
         this.contract = null;
         this.contractAbi = [{
           "inputs": [],
@@ -240,21 +238,21 @@ static getInstance() {
 }
 
 async initialize() {
-    // Initializes the Ethereum connection and sets up the contract instance
-    if (!window.ethereum) {
-        console.error('MetaMask not found');
-        throw new Error("MetaMask is not installed");
+    // Check if MetaMask is installed
+    if (typeof window.ethereum === 'undefined') {
+        throw new Error('Please install MetaMask to use this application');
     }
-    console.log('VotingService: Initializing');
-    await window.ethereum.request({ method: 'eth_requestAccounts' }); // Requests access to user's Ethereum accounts
+
+    // Initialize provider and signer from MetaMask
     this.provider = new ethers.providers.Web3Provider(window.ethereum);
-    this.signer = this.provider.getSigner(); // Gets the signer for executing transactions
+    this.signer = this.provider.getSigner();
+
+    // Creates a configured contract instance
     this.contract = new ethers.Contract(
         this.contractAddress,
         this.contractAbi,
         this.signer
     );
-    console.log('VotingService: Initialized successfully');
 }
 
 async connectWallet() {
@@ -265,21 +263,6 @@ async connectWallet() {
     const address = await this.signer.getAddress(); // Retrieves the connected wallet address
     console.log('VotingService: Connected address:', address);
     return address;
-}
-
-async createVotingSession(topic, candidateNames, duration) {
-    // Creates a new voting session on the blockchain
-    await this.initialize();
-    UIUtils.showLoadingPopup('Creating voting session...');
-    try {
-        const tx = await this.contract.createVotingSession(topic, candidateNames, duration);
-        await tx.wait(); // Waits for the transaction to be mined
-        UIUtils.hideLoadingPopup();
-        return true;
-    } catch (error) {
-        UIUtils.hideLoadingPopup();
-        throw error;
-    }
 }
 
 async vote(sessionId, candidateId) {
@@ -319,6 +302,7 @@ async vote(sessionId, candidateId) {
 
 async getActiveSessions() {
     // Retrieves all active voting sessions from the blockchain
+    //MVC: Model
     await this.initialize();
     const sessionCount = await this.contract.sessionCount(); // Total number of sessions
     const sessions = [];

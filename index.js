@@ -26,7 +26,7 @@ app.use(session({
     }
 }));
 
-const port = 3000;
+const port = 3002;
 
 const HOLESKY_RPC_URL = process.env.HOLESKY_RPC_URL;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
@@ -42,7 +42,7 @@ const users = new Map();
 fs.createReadStream('data/users.csv')
     .pipe(csv())
     .on('data', (row) => {
-        users.set(row.address, row.role);
+        users.set(row.address.trim(), row.role.trim());
     })
     .on('end', () => {
         console.log('Loaded users:', Array.from(users.entries()));
@@ -134,12 +134,21 @@ app.get('/api/check-session', (req, res) => {
 // Add middleware to check admin rights
 const requireAdmin = async (req, res, next) => {
     const address = req.headers['x-user-address'];
-    const role = users.get(address?.toLowerCase());
+    console.log('Checking admin rights for:', address);
+    // Check address case-insensitively
+    const role = Array.from(users.keys()).find(
+        addr => addr.toLowerCase() === address?.toLowerCase()
+    );
+    const userRole = role ? users.get(role) : null;
+    console.log('User role:', userRole);
     
-    if (role === 'admin') {
+    if (userRole === 'admin') {
         next();
     } else {
-        res.status(403).send('Unauthorized');
+        res.status(403).json({ 
+            message: 'Unauthorized: Admin rights required',
+            error: 'NOT_ADMIN'
+        });
     }
 };
 
@@ -147,13 +156,29 @@ app.post("/createSession", requireAdmin, async (req, res) => {
     const { topic, candidateNames, duration } = req.body;
 
     try {
+        console.log("Creating session with params:", { topic, candidateNames, duration });
+        
+        if (!topic || !candidateNames || !duration) {
+            return res.status(400).json({ 
+                message: "Missing required parameters" 
+            });
+        }
+
         console.log("Creating new voting session...");
         const tx = await contractInstance.createVotingSession(topic, candidateNames, duration);
+        console.log("Transaction sent:", tx.hash);
         await tx.wait();
-        res.status(200).send("Voting session created successfully!");
+        console.log("Transaction completed:", tx.hash);
+        res.status(200).json({ 
+            message: "Voting session created successfully!",
+            transactionHash: tx.hash 
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).send("Error creating voting session.");
+        console.error("Contract error:", error);
+        res.status(500).json({ 
+            message: error.message || "Error creating voting session",
+            error: error.toString()
+        });
     }
 });
 

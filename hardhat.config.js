@@ -1,7 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
+require('dotenv').config();
 
 //require("@nomiclabs/hardhat-ethers")
- require('dotenv').config()
 
  const HOLESKY_RPC_URL = process.env.HOLESKY_RPC_URL
  const PRIVATE_KEY = process.env.PRIVATE_KEY

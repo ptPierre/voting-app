@@ -4,16 +4,23 @@ class UIUtils {
         const notification = document.createElement('div');
         notification.className = `notification ${type}`; // Adds appropriate styling based on the type
         notification.textContent = message; // Sets the notification message
-        document.body.appendChild(notification); // Appends the notification to the DOM
 
-        notification.offsetHeight; // Triggers a reflow to ensure the animation is applied
+        // Remove any existing notifications
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(n => n.remove());
+
+        document.body.appendChild(notification);
+
+        // Force reflow
+        void notification.offsetHeight;
+
         notification.classList.add('show'); // Adds the 'show' class to make the notification visible
 
-        // Removes the notification after 3 seconds
+        // Removes the notification after 5 seconds
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300); // Ensures smooth removal
-        }, 3000);
+        }, 5000); // Show for 5 seconds
     }
 
     static formatTime(seconds) {

@@ -24,35 +24,44 @@ class SessionManager {
     }
 
     async createSession() {
-        // Handles the creation of a new voting session
-
-        const topic = document.getElementById("sessionTopic").value; // Retrieves the session topic
+        const topic = document.getElementById("sessionTopic").value;
         const candidateNames = document.getElementById("sessionCandidates").value
-            .split(",") // Splits the input string into an array
-            .map(name => name.trim()) // Trims whitespace from each candidate name
-            .filter(name => name.length > 0); // Removes empty strings from the array
-        const duration = document.getElementById("sessionDuration").value; // Retrieves the session duration
+            .split(",")
+            .map(name => name.trim())
+            .filter(name => name.length > 0);
+        const duration = document.getElementById("sessionDuration").value;
 
-        // Validates the input fields before proceeding
         if (!this.validateSessionInput(topic, candidateNames, duration)) {
             return;
         }
 
         const submitButton = document.querySelector('button[type="submit"]');
-        submitButton.disabled = true; // Disables the submit button to prevent multiple clicks
-        submitButton.innerHTML = '<span class="loading-dots">Creating Session</span>'; // Shows a loading indicator
+        submitButton.disabled = true;
+        UIUtils.showLoadingPopup('Creating new voting session...');
 
         try {
-            // Sends a request to the VotingService to create a new voting session
-            await this.votingService.createVotingSession(topic, candidateNames, duration);
-            // Displays a success message to the user
+            // Initialize VotingService first
+            await this.votingService.initialize();
+
+            // Create session directly through smart contract
+            const tx = await this.votingService.contract.createVotingSession(
+                topic,
+                candidateNames,
+                duration
+            );
+            
+            // Wait for transaction to be mined
+            console.log('Waiting for transaction:', tx.hash);
+            await tx.wait();
+            console.log('Transaction confirmed');
+
             UIUtils.showNotification("Session created successfully!");
-            this.resetForm(); // Resets the form fields
+            this.resetForm();
         } catch (error) {
-            // Displays an error message if the session creation fails
-            UIUtils.showNotification(error.message, 'error');
+            console.error('Transaction failed:', error);
+            UIUtils.showNotification("Failed to create session", 'error');
         } finally {
-            // Re-enables the submit button and resets its content
+            UIUtils.hideLoadingPopup();
             submitButton.disabled = false;
             submitButton.innerHTML = 'Create Session';
         }

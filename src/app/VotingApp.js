@@ -1,6 +1,7 @@
 class VotingApp {
     constructor() {
         // Initializes the VotingApp class by obtaining instances of VotingService and AuthService
+        // Singleton pattern
         this.votingService = VotingService.getInstance();
         this.authService = AuthService.getInstance();
         this.initialize();
@@ -73,10 +74,10 @@ class VotingApp {
     }
 
     attachEventListeners() {
-        // Attaches event listeners to the UI elements
+        // Observes button clicks
+        // Observer pattern
         const connectButton = document.querySelector('.login-box button');
         if (connectButton) {
-            // Handles MetaMask connection when the "Connect" button is clicked
             connectButton.addEventListener('click', () => this.connectMetamask());
         }
     }
@@ -107,6 +108,7 @@ class VotingApp {
 
     async listVotingSessions() {
         // Fetches and displays the list of active voting sessions
+        //MVC: Controller
 
         const sessionsList = document.getElementById("sessionsList");
         UIUtils.showLoadingPopup('Fetching active sessions...');

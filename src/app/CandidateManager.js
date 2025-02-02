@@ -60,13 +60,14 @@ class CandidateManager {
         addButton.innerHTML = '<span class="loading-dots">Adding</span>';
 
         try {
-            // Sends a request to add the new candidate via the VotingService
+            console.log('Adding candidate:', { sessionId, candidateName });
             await this.votingService.addCandidate(sessionId, candidateName);
             // Notifies the user of success and refreshes the candidate list
             UIUtils.showNotification("Candidate added successfully!");
             document.getElementById("newCandidateName").value = '';
             await this.listCandidates();
         } catch (error) {
+            console.error('Error adding candidate:', error);
             // Displays an error message if adding the candidate fails
             UIUtils.showNotification(error.message, "error");
         } finally {
@@ -106,16 +107,16 @@ class CandidateManager {
             return '<div class="no-candidates">No candidates found for this session.</div>';
         }
 
-        return 
+        return `
             <ul>
-                ${candidates.map((candidate, index) => 
+                ${candidates.map((candidate, index) => `
                     <li>
                         <span class="candidate-name">${candidate.name}</span>
                         <span class="candidate-id">ID: ${index}</span>
                     </li>
-                ).join('')}
+                `).join('')}
             </ul>
-        ;
+        `;
     }
 }
 
